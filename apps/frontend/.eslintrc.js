@@ -10,6 +10,7 @@ module.exports = {
   parser: "@typescript-eslint/parser",
   parserOptions: {
     project: "tsconfig.json",
+    tsconfigRootDir: __dirname,
     ecmaVersion: 2021,
     sourceType: "module",
     ecmaFeatures: {
@@ -40,9 +41,12 @@ module.exports = {
   ignorePatterns: [
     "node_modules/",
     ".next/",
+    "**/.next/**/*",
     "out/",
     "public/",
     "next.config.js",
-    "*.d.ts"
+    "*.d.ts",
+    "build/",
+    "dist/"
   ]
 }; 
