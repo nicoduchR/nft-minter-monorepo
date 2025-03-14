@@ -23,7 +23,7 @@ version: '3'
 
 services:
   turbo-cache:
-    image: ghcr.io/vercel/turborepo-remote-cache:latest
+    image: ducktors/turborepo-remote-cache:latest
     container_name: turborepo-cache
     restart: always
     ports:
