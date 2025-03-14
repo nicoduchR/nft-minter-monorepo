@@ -47,7 +47,7 @@ jobs:
             git pull origin development
             
             # Create or update .env file with all secrets
-            cat > apps/frontend/.env.local << EOT
+            cat > apps/frontend/.env << EOT
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
             EOT
     
