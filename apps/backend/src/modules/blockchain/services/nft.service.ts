@@ -277,7 +277,7 @@ export class NftService {
           return ethers.toBigInt(log.topics[3]).toString();
         }
         // ERC1155 TransferSingle event
-        else if (log.topics.length === 4 && log.data) {
+        else if (log.data) {
           // TokenId is in data
           const decodedData = ethers.AbiCoder.defaultAbiCoder().decode(
             ['uint256', 'uint256'],
