@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Collection } from '../../domain/entities/collection.entity';
 import { ICollectionRepository } from '../../domain/repositories/collection.repository.interface';
+import { CollectionWithNftImageDto } from '../../modules/collection/dto/collection-with-nft-image.dto';
 
 @Injectable()
 export class CollectionRepository implements ICollectionRepository {
@@ -25,6 +26,28 @@ export class CollectionRepository implements ICollectionRepository {
 
   async findAll(): Promise<Collection[]> {
     return this.collectionRepository.find();
+  }
+
+  async findAllWithNftImage(): Promise<CollectionWithNftImageDto[]> {
+    const collections = await this.collectionRepository.find({
+      relations: ['nfts'],
+    });
+    
+    return collections.map(collection => {
+      const dto = new CollectionWithNftImageDto();
+      Object.assign(dto, collection);
+      
+      // Find the first NFT with an image URL, if any
+      const nftWithImage = collection.nfts?.find(nft => nft.imageUrl);
+      if (nftWithImage) {
+        dto.representativeNftImageUrl = nftWithImage.imageUrl;
+      }
+      
+      // Remove the nfts array to avoid sending all NFTs in the response
+      delete dto.nfts;
+      
+      return dto;
+    });
   }
 
   async findByOwner(owner: string): Promise<Collection[]> {

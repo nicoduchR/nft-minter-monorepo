@@ -8,6 +8,7 @@ import { ICollectionRepository } from '../../domain/repositories/collection.repo
 import { Collection } from '../../domain/entities/collection.entity';
 import { CreateCollectionDto } from './dto/create-collection.dto';
 import { UpdateCollectionDto } from './dto/update-collection.dto';
+import { CollectionWithNftImageDto } from './dto/collection-with-nft-image.dto';
 
 @Injectable()
 export class CollectionService {
@@ -18,6 +19,10 @@ export class CollectionService {
 
   async findAll(): Promise<Collection[]> {
     return this.collectionRepository.findAll();
+  }
+
+  async findAllWithNftImage(): Promise<CollectionWithNftImageDto[]> {
+    return this.collectionRepository.findAllWithNftImage();
   }
 
   async findById(id: string): Promise<Collection> {

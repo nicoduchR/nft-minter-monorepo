@@ -19,6 +19,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CollectionService } from './collection.service';
 import { CreateCollectionDto } from './dto/create-collection.dto';
 import { UpdateCollectionDto } from './dto/update-collection.dto';
+import { CollectionWithNftImageDto } from './dto/collection-with-nft-image.dto';
 
 @ApiTags('collections')
 @Controller('collections')
@@ -30,6 +31,17 @@ export class CollectionController {
   @Get()
   async findAll() {
     return this.collectionService.findAll();
+  }
+
+  @ApiOperation({ summary: 'Get all collections with a representative NFT image' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'List of collections with NFT images',
+    type: [CollectionWithNftImageDto],
+  })
+  @Get('with-nft-image')
+  async findAllWithNftImage() {
+    return this.collectionService.findAllWithNftImage();
   }
 
   @ApiOperation({ summary: 'Get collection by ID' })
