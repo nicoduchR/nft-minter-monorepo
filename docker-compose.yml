@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3'
 
 services:
   postgres:
@@ -30,6 +30,21 @@ services:
   #     - "--networkId=1337"
   #     - "--chainId=1337"
 
+  turbo-cache:
+    image: ducktors/turborepo-remote-cache:latest
+    container_name: turborepo-cache
+    restart: always
+    ports:
+      - "3072:3000"
+    environment:
+      - TURBO_TOKEN=your-secret-token # Choose a secure token
+      - STORAGE_PROVIDER=local
+      - STORAGE_PATH=/app/data
+    volumes:
+      - ./data:/app/data
+
 volumes:
   postgres-data:
-  redis-data: 
+  redis-data:
+  data:
+    driver: local 

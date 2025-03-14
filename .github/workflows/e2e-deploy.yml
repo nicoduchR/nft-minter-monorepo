@@ -26,8 +26,6 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
     env:
-      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
       NODE_ENV: ${{ github.event.inputs.environment }}
 
     steps:
@@ -48,43 +46,68 @@ jobs:
       - name: Build shared package
         run: npm run build --filter=@nft-minter/shared
 
-      # Conditionally build and deploy frontend
       - name: Build frontend
         if: ${{ github.event.inputs.deploy_frontend == 'true' }}
         run: npm run build --filter=nft-minter-front
         env:
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-          # Add any other frontend environment variables
 
-      - name: Deploy frontend
-        if: ${{ github.event.inputs.deploy_frontend == 'true' }}
-        run: |
-          echo "Deploying frontend to ${{ github.event.inputs.environment }} environment"
-          # Add your frontend deployment commands here
-          # Examples:
-          # - Vercel: vercel --prod
-          # - AWS S3/CloudFront: aws s3 sync ./apps/frontend/.next/static s3://your-bucket
-          # - Custom script: ./scripts/deploy.sh frontend
-
-      # Conditionally build and deploy backend
       - name: Build backend
         if: ${{ github.event.inputs.deploy_backend == 'true' }}
         run: npm run build --filter=nft-minter-back
         env:
-          # Add any backend-specific environment variables
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
-      - name: Deploy backend
-        if: ${{ github.event.inputs.deploy_backend == 'true' }}
-        run: |
-          echo "Deploying backend to ${{ github.event.inputs.environment }} environment"
-          # Add your backend deployment commands here
-          # Examples:
-          # - Heroku: heroku container:push web
-          # - AWS ECS: aws ecs update-service
-          # - Custom script: ./scripts/deploy.sh backend
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      # Notification upon completion
+      - name: Deploy to Server
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            cd /home/azureuser/nft-minter-monorepo
+            git pull origin development
+            
+            # Setup environment files
+            if [[ "${{ github.event.inputs.deploy_backend }}" == "true" ]]; then
+              echo "Setting up backend environment..."
+              cat > apps/backend/.env << EOT
+              DB_HOST=${{ secrets.DB_HOST }}
+              DB_PORT=${{ secrets.DB_PORT }}
+              DB_USERNAME=${{ secrets.DB_USERNAME }}
+              DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+              DB_DATABASE=${{ secrets.DB_DATABASE }}
+              DATABASE_URL=${{ secrets.DATABASE_URL }}
+              ETHERSCAN_API_KEY=${{ secrets.ETHERSCAN_API_KEY }}
+              ETHERSCAN_API_ENDPOINT=${{ secrets.ETHERSCAN_API_ENDPOINT }}
+              ETH_RPC_URL=${{ secrets.ETH_RPC_URL }}
+              OPENSEA_API_KEY=${{ secrets.OPENSEA_API_KEY }}
+              JWT_SECRET=${{ secrets.JWT_SECRET }}
+              JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}
+              REDIS_HOST=${{ secrets.REDIS_HOST }}
+              REDIS_PORT=${{ secrets.REDIS_PORT }}
+              OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+              EOT
+              
+              # Build and start the backend container
+              cd apps/backend
+              docker-compose up -d --build api
+              cd ../..
+            fi
+            
+            if [[ "${{ github.event.inputs.deploy_frontend }}" == "true" ]]; then
+              echo "Setting up frontend environment..."
+              cat > apps/frontend/.env.local << EOT
+              NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+              EOT
+              
+              # Build and start the frontend container
+              cd apps/frontend
+              docker-compose up -d --build app
+            fi
+          EOF
+          
       - name: Notify deployment success
         if: success()
         run: |

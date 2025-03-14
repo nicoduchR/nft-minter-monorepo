@@ -2,9 +2,9 @@ name: Turborepo Remote Cache
 
 on:
   push:
-    branches: [main]
+    branches: [development]
   pull_request:
-    branches: [main]
+    branches: [development]
 
 jobs:
   cache-and-test:
@@ -12,7 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      TURBO_API: ${{ secrets.TURBO_API }} # This will be your server URL
+      TURBO_TEAM: ""
       TURBO_REMOTE_ONLY: true
 
     steps:
