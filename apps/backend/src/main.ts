@@ -20,8 +20,8 @@ async function bootstrap() {
 
   // Swagger documentation
   const config = new DocumentBuilder()
-    .setTitle('NFT Minter API')
-    .setDescription('API for NFT Minting Platform')
+    .setTitle('Checkpoint One API')
+    .setDescription('API for Checkpoint One')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
