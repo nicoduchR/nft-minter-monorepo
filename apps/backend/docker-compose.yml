@@ -14,15 +14,15 @@ services:
       - DB_PASSWORD=example
       - DB_DATABASE=nft_minter
       - DATABASE_URL=postgresql://postgres:example@db:5432/nft_minter
-      - ETHERSCAN_API_KEY=***REMOVED***
+      - ETHERSCAN_API_KEY=your-etherscan-api-key-here
       - ETHERSCAN_API_ENDPOINT=https://api.etherscan.io/v2/api
-      - ETH_RPC_URL=https://sepolia.infura.io/v3/***REMOVED***
-      - OPENSEA_API_KEY=***REMOVED***
+      - ETH_RPC_URL=https://sepolia.infura.io/v3/your-infura-project-id-here
+      - OPENSEA_API_KEY=your-opensea-api-key-here
       - JWT_SECRET=your-super-secret-jwt-key-change-in-production
       - JWT_EXPIRATION=1d
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - OPENAI_API_KEY=***REMOVED***
+      - OPENAI_API_KEY=your-openai-api-key-here
 
     depends_on:
       - db
