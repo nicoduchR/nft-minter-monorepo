@@ -2,7 +2,7 @@ name: Frontend Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [development]
     paths:
       - 'apps/frontend/**'
       - 'packages/shared/**'
@@ -44,7 +44,7 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             cd /home/azureuser/nft-minter-monorepo
-            git pull origin main
+            git pull origin development
             
             # Create or update .env.local file with frontend environment variables
             cat > apps/frontend/.env.local << EOT
