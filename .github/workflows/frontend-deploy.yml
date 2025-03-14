@@ -42,16 +42,23 @@ jobs:
           
       - name: Deploy to Server
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            cd /home/azureuser/nft-minter-monorepo
-            git pull origin development
-            
-            # Create or update .env file with all secrets
-            cat > apps/frontend/.env << EOT
-            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
-            EOT
-    
-            # Restart the application using docker-compose
-            cd apps/frontend
-            docker-compose up -d --build app
-          EOF 
+          # Create a temporary deployment script
+          cat > deploy.sh << 'SCRIPTEOF'
+          cd /home/azureuser/nft-minter-monorepo
+          git pull origin development
+          
+          # Create or update .env file with secrets
+          cat > apps/frontend/.env << EOT
+          NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+          EOT
+  
+          # Restart the application using docker-compose
+          cd apps/frontend
+          docker-compose up -d --build app
+          SCRIPTEOF
+          
+          # Export the environment variable to be used in the script
+          export NEXT_PUBLIC_API_URL="${{ secrets.NEXT_PUBLIC_API_URL }}"
+          
+          # Execute the deployment via SSH
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} 'bash -s' < deploy.sh 
