@@ -1,0 +1,101 @@
+name: Backend Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/backend/**'
+      - 'packages/shared/**'
+      - '.github/workflows/backend-deploy.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy Backend
+    runs-on: ubuntu-latest
+    # If you need Docker for your backend deployment
+    # services:
+    #   postgres:
+    #     image: postgres:14
+    #     env:
+    #       POSTGRES_USER: postgres
+    #       POSTGRES_PASSWORD: postgres
+    #       POSTGRES_DB: test
+    #     ports:
+    #       - 5432:5432
+    #     options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build shared package
+        run: npm run build --filter=@nft-minter/shared
+
+      - name: Build backend
+        run: npm run build --filter=nft-minter-back
+        env:
+          # Add any environment variables needed for build
+          NODE_ENV: production
+
+      # Test the backend (optional if already covered in main CI)
+      - name: Test backend
+        run: npm run test --filter=nft-minter-back
+        env:
+          NODE_ENV: test
+          # Add any test-specific environment variables
+          # DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+
+      # Example deployment steps for different platforms
+      
+      # For Heroku:
+      # - name: Deploy to Heroku
+      #   uses: akhileshns/heroku-deploy@v3.12.14
+      #   with:
+      #     heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
+      #     heroku_app_name: "your-app-name"
+      #     heroku_email: ${{ secrets.HEROKU_EMAIL }}
+      #     appdir: "apps/backend"
+
+      # For AWS Elastic Beanstalk:
+      # - name: Generate deployment package
+      #   run: |
+      #     cd apps/backend
+      #     zip -r deploy.zip . -x "node_modules/*" -x ".git/*"
+      
+      # - name: Deploy to EB
+      #   uses: einaregilsson/beanstalk-deploy@v21
+      #   with:
+      #     aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     application_name: your-application-name
+      #     environment_name: your-environment-name
+      #     version_label: ${{ github.sha }}
+      #     region: us-east-1
+      #     deployment_package: apps/backend/deploy.zip
+
+      # For Docker/Kubernetes (example if you containerize your backend):
+      # - name: Set up Docker Buildx
+      #   uses: docker/setup-buildx-action@v1
+      
+      # - name: Login to DockerHub
+      #   uses: docker/login-action@v1
+      #   with:
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      # - name: Build and push
+      #   uses: docker/build-push-action@v2
+      #   with:
+      #     context: ./apps/backend
+      #     push: true
+      #     tags: yourusername/yourapp:latest 

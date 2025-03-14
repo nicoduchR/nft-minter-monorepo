@@ -1,0 +1,93 @@
+name: End-to-End Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_frontend:
+        description: 'Deploy frontend'
+        type: boolean
+        default: true
+      deploy_backend:
+        description: 'Deploy backend'
+        type: boolean
+        default: true
+      environment:
+        description: 'Target environment'
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+        default: 'development'
+
+jobs:
+  build-test-deploy:
+    name: Build, Test and Deploy
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    env:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      NODE_ENV: ${{ github.event.inputs.environment }}
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build shared package
+        run: npm run build --filter=@nft-minter/shared
+
+      # Conditionally build and deploy frontend
+      - name: Build frontend
+        if: ${{ github.event.inputs.deploy_frontend == 'true' }}
+        run: npm run build --filter=nft-minter-front
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+          # Add any other frontend environment variables
+
+      - name: Deploy frontend
+        if: ${{ github.event.inputs.deploy_frontend == 'true' }}
+        run: |
+          echo "Deploying frontend to ${{ github.event.inputs.environment }} environment"
+          # Add your frontend deployment commands here
+          # Examples:
+          # - Vercel: vercel --prod
+          # - AWS S3/CloudFront: aws s3 sync ./apps/frontend/.next/static s3://your-bucket
+          # - Custom script: ./scripts/deploy.sh frontend
+
+      # Conditionally build and deploy backend
+      - name: Build backend
+        if: ${{ github.event.inputs.deploy_backend == 'true' }}
+        run: npm run build --filter=nft-minter-back
+        env:
+          # Add any backend-specific environment variables
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Deploy backend
+        if: ${{ github.event.inputs.deploy_backend == 'true' }}
+        run: |
+          echo "Deploying backend to ${{ github.event.inputs.environment }} environment"
+          # Add your backend deployment commands here
+          # Examples:
+          # - Heroku: heroku container:push web
+          # - AWS ECS: aws ecs update-service
+          # - Custom script: ./scripts/deploy.sh backend
+
+      # Notification upon completion
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "Deployment to ${{ github.event.inputs.environment }} completed successfully!"
+          # Add notification logic (Slack, Discord, etc.) if needed
+          # curl -X POST -H 'Content-type: application/json' --data '{"text":"Deployment successful!"}' ${{ secrets.SLACK_WEBHOOK_URL }} 

@@ -1,0 +1,27 @@
+{
+  "name": "nft-minter-monorepo",
+  "version": "1.0.0",
+  "description": "NFT Minter Monorepo with NestJS backend and NextJS frontend",
+  "private": true,
+  "packageManager": "npm@8.11.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "start": "turbo run start",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "clean": "turbo run clean && rm -rf node_modules"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@turbo/gen": "^2.4.4",
+    "turbo": "^2.4.4",
+    "typescript": "^5.8.2"
+  }
+}
