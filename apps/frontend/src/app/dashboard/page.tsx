@@ -4,19 +4,13 @@ import { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
+import { NFT } from '@/domain/entities/NFT';
+import { getUserNFTs } from '@/applications/use-cases/nft/getUserNFTs';
+import { apiNFTRepository } from '@/infrastructure/adapters/repositories/ApiNFTRepository';
 
 type WalletInfo = {
   balance: number;
   address: string;
-};
-
-type NFT = {
-  id: string;
-  name: string;
-  image: string;
-  collection: string;
-  platform: string;
-  mintedAt: string;
 };
 
 type MintOpportunity = {
@@ -37,78 +31,96 @@ export default function DashboardPage() {
   const [recentNFTs, setRecentNFTs] = useState<NFT[]>([]);
   const [upcomingMints, setUpcomingMints] = useState<MintOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // This would be a real API call in a production environment
+    // Fetch dashboard data from API
     const fetchDashboardData = async () => {
       setLoading(true);
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Mock wallet data
-      setWalletInfo({
-        balance: 1.75,
-        address: '0xf3a4...e6c2',
-      });
-
-      // Mock recent NFTs
-      setRecentNFTs([
-        {
-          id: '1',
-          name: 'Bored Ape #7281',
-          image: 'https://i.seadn.io/gae/hcN0obYvS8-xBatmK3WZoLWiUnzGkNJ7TPbYZ2JGmrG3ViCLAIrhG5NbRHCG2r-qHw8sh0oBmwfmJTnPHxje2xDr9RJJdOjMaLs?w=500&auto=format',
-          collection: 'BAYC',
-          platform: 'OpenSea',
-          mintedAt: '2023-10-15',
-        },
-        {
-          id: '2',
-          name: 'Crypto Punk #3124',
-          image: 'https://cryptopunks.app/cryptopunks/cryptopunk3100.png',
-          collection: 'CryptoPunks',
-          platform: 'Rarible',
-          mintedAt: '2023-11-02',
-        },
-      ]);
-
-      // Mock upcoming mints
-      setUpcomingMints([
-        {
-          id: '1',
-          name: 'Moonbirds',
-          image: 'https://openseauserdata.com/files/038f517148b223aba7d5989e181d7f1a.png',
-          collection: 'Moonbirds Collection',
-          price: 2.5,
-          currency: 'ETH',
-          platform: 'OpenSea',
-          mintDate: '2023-12-25',
-          countdown: '5 days',
-        },
-        {
-          id: '2',
-          name: 'DeGods',
-          image: 'https://img-cdn.magiceden.dev/rs:fill:400:400:0:0/plain/https%3A%2F%2Fcontent.solana-nft.com%2Fimages%2Fde_gods%2Fde_gods.png',
-          collection: 'DeGods Genesis',
-          price: 25,
-          currency: 'SOL',
-          platform: 'Magic Eden',
-          mintDate: '2023-12-15',
-          countdown: '2 days',
-        },
-        {
-          id: '3',
-          name: 'Azuki',
-          image: 'https://ipfs.io/ipfs/QmYDvPAXtiJg7s8JdRBSLWdgSphQdac8j1YuQNNxcGE1hg/8875.png',
-          collection: 'Azuki Origins',
-          price: 1.5,
-          currency: 'ETH',
-          platform: 'OpenSea',
-          mintDate: '2024-01-05',
-          countdown: '15 days',
-        },
-      ]);
-
-      setLoading(false);
+      setError(null);
+      
+      // Log the API URL in development mode
+      if (process.env.NODE_ENV !== 'production') {
+        console.info(`API URL: ${process.env.NEXT_PUBLIC_API_URL || 'Not set - using default'}`);
+      }
+      
+      try {
+        // Mock wallet data (this could be replaced with a real API call in the future)
+        setWalletInfo({
+          balance: 1.75,
+          address: '0xf3a4...e6c2',
+        });
+        
+        // Fetch user NFTs using the repository
+        // The authentication flow works as follows:
+        // 1. On login, the token is stored in localStorage and set in the ApiClient
+        // 2. The ApiNFTRepository uses the same ApiClient instance from authService
+        // 3. Each request automatically includes the Bearer token from localStorage
+        const userNFTs = await getUserNFTs(apiNFTRepository);
+        setRecentNFTs(userNFTs);
+        
+        // Mock upcoming mints (this could be replaced with a real API call in the future)
+        setUpcomingMints([
+          {
+            id: '1',
+            name: 'Moonbirds',
+            image: 'https://openseauserdata.com/files/038f517148b223aba7d5989e181d7f1a.png',
+            collection: 'Moonbirds Collection',
+            price: 2.5,
+            currency: 'ETH',
+            platform: 'OpenSea',
+            mintDate: '2023-12-25',
+            countdown: '5 days',
+          },
+          {
+            id: '2',
+            name: 'DeGods',
+            image: 'https://img-cdn.magiceden.dev/rs:fill:400:400:0:0/plain/https%3A%2F%2Fcontent.solana-nft.com%2Fimages%2Fde_gods%2Fde_gods.png',
+            collection: 'DeGods Genesis',
+            price: 25,
+            currency: 'SOL',
+            platform: 'Magic Eden',
+            mintDate: '2023-12-15',
+            countdown: '2 days',
+          },
+          {
+            id: '3',
+            name: 'Azuki',
+            image: 'https://ipfs.io/ipfs/QmYDvPAXtiJg7s8JdRBSLWdgSphQdac8j1YuQNNxcGE1hg/8875.png',
+            collection: 'Azuki Origins',
+            price: 1.5,
+            currency: 'ETH',
+            platform: 'OpenSea',
+            mintDate: '2024-01-05',
+            countdown: '15 days',
+          },
+        ]);
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+        setError('Failed to load dashboard data. Please try again later.');
+        
+        // Fallback to mock NFT data in case of error
+        setRecentNFTs([
+          {
+            id: '1',
+            name: 'Bored Ape #7281',
+            image: 'https://i.seadn.io/gae/hcN0obYvS8-xBatmK3WZoLWiUnzGkNJ7TPbYZ2JGmrG3ViCLAIrhG5NbRHCG2r-qHw8sh0oBmwfmJTnPHxje2xDr9RJJdOjMaLs?w=500&auto=format',
+            collection: 'BAYC',
+            platform: 'OpenSea',
+            mintedAt: '2023-10-15',
+          },
+          {
+            id: '2',
+            name: 'Crypto Punk #3124',
+            image: 'https://cryptopunks.app/cryptopunks/cryptopunk3100.png',
+            collection: 'CryptoPunks',
+            platform: 'Rarible',
+            mintedAt: '2023-11-02',
+          },
+        ]);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchDashboardData();
@@ -129,9 +141,14 @@ export default function DashboardPage() {
       {/* Header with greeting and wallet info */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">
-          Welcome back, {user?.name || user?.email || 'User'}
+          Welcome back, {user?.firstName || user?.email || 'User'}
         </h1>
         <p className="text-gray-600">Here{"'"}s what{"'"}s happening with your NFTs today.</p>
+        {error && (
+          <div className="mt-2 text-sm text-red-600">
+            {error}
+          </div>
+        )}
       </div>
 
       {/* Wallet Overview Card */}
@@ -173,7 +190,7 @@ export default function DashboardPage() {
       {/* Recent NFTs */}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-medium text-gray-900">Your Recent NFTs</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Your NFTs</h2>
           <Link 
             href="/nfts"
             className="text-sm font-medium text-blue-600 hover:text-blue-500"
@@ -182,7 +199,7 @@ export default function DashboardPage() {
           </Link>
         </div>
         
-        {recentNFTs.length === 0 ? (
+        {(!recentNFTs || recentNFTs.length === 0) ? (
           <div className="bg-white rounded-lg border border-gray-200 shadow p-6 text-center">
             <p className="text-gray-500">You haven&apos;t minted any NFTs yet.</p>
             <Link 

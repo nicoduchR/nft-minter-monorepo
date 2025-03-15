@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
@@ -14,11 +14,12 @@ export default function LoginPage() {
   const { login, isAuthenticated } = useAuth();
   const router = useRouter();
 
-  // Redirect if already logged in
-  if (isAuthenticated) {
-    router.push('/dashboard');
-    return null;
-  }
+  // Handle authenticated redirect in useEffect instead of during render
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/dashboard');
+    }
+  }, [isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +35,11 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+
+  // Don't render the form at all if authenticated - prevents flicker
+  if (isAuthenticated) {
+    return null;
+  }
 
   return (
     <>
